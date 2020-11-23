@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 "use strict"
 
 const fs = require('fs');
@@ -10,6 +12,7 @@ const {resolve} = require('path');
 	let page = 0;
 	let pageSize = 5000;
 	let result = [];
+	let count = 0;
 	let data;
 	do {
 		process.stderr.write(page+' ');
@@ -24,10 +27,11 @@ const {resolve} = require('path');
 			throw e;
 		}
 		result.push(data);
+		count += ((data || {}).features || []).length || 0;
 		page++;
 	} while (data.exceededTransferLimit)
 	
-	process.stderr.write('\n');
+	process.stderr.write(' '+count+'\n');
 	
 	console.log('stringify')
 	result = JSON.stringify(result);

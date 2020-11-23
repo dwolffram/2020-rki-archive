@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 "use strict"
 
 const fs = require('fs');
@@ -25,22 +27,26 @@ let filesIn = fs.readdirSync(pathIn).filter(f => f.endsWith('.bz2'));
 
 		let type = fileIn.replace(timestamp,'?');
 		let data;
-		
-		switch (type) {
-			case '?_api_raw.json.bz2':
-				data = await openApiRaw(filenameIn);
-			break;
-			case '?_dump.csv.bz2':
-				data = await openCsvDump(filenameIn);
-			break;
-			default: throw Error(`unknown type "${type}"`)
+
+		try {
+			switch (type) {
+				case '?_api_raw.json.bz2':
+					data = await openApiRaw(filenameIn);
+				break;
+				case '?_dump.csv.bz2':
+					data = await openCsvDump(filenameIn);
+				break;
+				default: throw Error(`unknown type "${type}"`)
+			}
+
+			data.forEach(cleanupDates);
+			
+			checkData(data);
+
+			await saveData(data, filenameOut);
+		} catch (e) {
+			
 		}
-
-		data.forEach(cleanupDates);
-		
-		checkData(data);
-
-		await saveData(data, filenameOut);
 	}
 })()
 
@@ -115,7 +121,8 @@ async function openCsvDump(filenameIn) {
 		if (defined('AnzahlGenesen')) obj.AnzahlGenesen = parseInt(obj.AnzahlGenesen, 10);
 		if (defined('NeuGenesen')) obj.NeuGenesen = parseInt(obj.NeuGenesen, 10);
 		if (defined('IstErkrankungsbeginn')) obj.IstErkrankungsbeginn = parseInt(obj.IstErkrankungsbeginn, 10);
-		while (obj.IdLandkreis.length < 5) obj.IdLandkreis = '0'+obj.IdLandkreis;
+
+		if (obj.IdLandkreis === '0-1') obj.IdLandkreis = '-1';
 
 		if (defined('Referenzdatum')) obj.Refdatum = obj.Referenzdatum;
 
@@ -154,18 +161,23 @@ function checkData(data) {
 				delete obj[key];
 				return;
 			}
-			if (!config.checkField(key, obj[key])) throw Error('field check failed: key "'+key+'", value "'+obj[key]+'"');
+			if (!config.checkField(key, obj[key])) error('field check failed: key "'+key+'", value "'+obj[key]+'"');
 		});
 		
 		config.mandatoryList.forEach(keyMandatory => {
-			if (!keysLookup.has(keyMandatory)) throw new Error('mandatory key missing: "'+keyMandatory+'" in Object "'+JSON.stringify(obj)+'"');
+			if (!keysLookup.has(keyMandatory)) error('mandatory key missing: "'+keyMandatory+'" in Object "'+JSON.stringify(obj)+'"');
 			keysLookup.delete(keyMandatory);
 		})
 
 		Array.from(keysLookup.keys()).forEach(key => {
-			if (!config.optionalSet.has(key)) throw new Error('key is not known: "'+key+'"');
+			if (!config.optionalSet.has(key)) error('key is not known: "'+key+'"');
 		})
 	})
+
+	function error(text) {
+		console.error(text);
+		throw Error();
+	}
 }
 
 async function saveData(data, filenameOut) {
@@ -196,6 +208,11 @@ function cleanupDates(obj) {
 				}
 
 				if (/^\d{1,2}\/\d{1,2}\/2020 12:00:00 AM$/.test(result)) {
+					result = Date.parse(result);
+					break;
+				}
+
+				if (/^2020\/\d{2}\/\d{2} 00:00:00$/.test(result)) {
 					result = Date.parse(result);
 					break;
 				}

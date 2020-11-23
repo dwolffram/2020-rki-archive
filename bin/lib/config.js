@@ -2,9 +2,9 @@
 
 const fields = [
 	{name:'ObjectId',             mandatory:true,  check:v => (typeof v === 'number')},
-	{name:'IdBundesland',         mandatory:true,  check:v => (typeof v === 'number') && /^\d+$/.test(v)},
+	{name:'IdBundesland',         mandatory:true,  check:v => (typeof v === 'number') && /^(\-1|\d+)$/.test(v)},
 	{name:'Bundesland',           mandatory:true,  check:v => (typeof v === 'string')},
-	{name:'IdLandkreis',          mandatory:true,  check:v => (typeof v === 'string') && /^\d{5}$/.test(v)},
+	{name:'IdLandkreis',          mandatory:true,  check:v => (typeof v === 'string') && /^(\-1|\d{5})$/.test(v)},
 	{name:'Landkreis',            mandatory:true,  check:v => (typeof v === 'string')},
 	{name:'Altersgruppe',         mandatory:true,  check:v => (typeof v === 'string')},
 	{name:'Altersgruppe2',        mandatory:false, check:v => (typeof v === 'string')},
@@ -12,8 +12,8 @@ const fields = [
 	{name:'AnzahlFall',           mandatory:true,  check:v => (typeof v === 'number')},
 	{name:'AnzahlTodesfall',      mandatory:true,  check:v => (typeof v === 'number')},
 	{name:'AnzahlGenesen',        mandatory:false, check:v => (typeof v === 'number')},
-	{name:'NeuerFall',            mandatory:true,  check:v => (typeof v === 'number')},
-	{name:'NeuerTodesfall',       mandatory:true,  check:v => (typeof v === 'number')},
+	{name:'NeuerFall',            mandatory:false, check:v => (typeof v === 'number')},
+	{name:'NeuerTodesfall',       mandatory:false, check:v => (typeof v === 'number')},
 	{name:'NeuGenesen',           mandatory:false, check:v => (typeof v === 'number')},
 	{name:'Refdatum',             mandatory:false, check:v => (typeof v === 'string') || (typeof v === 'number')},
 	{name:'Meldedatum',           mandatory:true,  check:v => (typeof v === 'string') || (typeof v === 'number')},
